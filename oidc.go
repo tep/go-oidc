@@ -1,5 +1,5 @@
 // Package oidc implements OpenID Connect client logic for the golang.org/x/oauth2 package.
-package oidc
+package oidc // import "toolman.org/thirdparty/coreos/oidc"
 
 import (
 	"context"
