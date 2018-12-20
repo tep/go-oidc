@@ -94,6 +94,14 @@ type providerJSON struct {
 // The issuer is the URL identifier for the service. For example: "https://accounts.google.com"
 // or "https://login.salesforce.com".
 func NewProvider(ctx context.Context, issuer string) (*Provider, error) {
+	return NewProviderFrom(ctx, issuer, issuer)
+}
+
+// NewProviderFrom is similar to NewProvider but also takes a from argument for
+// those providers whose discovery document publishes an issuer URL that
+// differs from the provided issuer. This is most often the case for
+// multi-tenant auth providers (e.g. onelogin.com)
+func NewProviderFrom(ctx context.Context, issuer, from string) (*Provider, error) {
 	wellKnown := strings.TrimSuffix(issuer, "/") + "/.well-known/openid-configuration"
 	req, err := http.NewRequest("GET", wellKnown, nil)
 	if err != nil {
@@ -115,14 +123,14 @@ func NewProvider(ctx context.Context, issuer string) (*Provider, error) {
 	}
 
 	var p providerJSON
-	err = unmarshalResp(resp, body, &p)
-	if err != nil {
+	if err = unmarshalResp(resp, body, &p); err != nil {
 		return nil, fmt.Errorf("oidc: failed to decode provider discovery object: %v", err)
 	}
 
-	if p.Issuer != issuer {
-		return nil, fmt.Errorf("oidc: issuer did not match the issuer returned by provider, expected %q got %q", issuer, p.Issuer)
+	if p.Issuer != from {
+		return nil, fmt.Errorf("oidc: unexpected issuer returned by provider, got %q; expected %q", p.Issuer, from)
 	}
+
 	return &Provider{
 		issuer:       p.Issuer,
 		authURL:      p.AuthURL,
