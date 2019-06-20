@@ -1,4 +1,4 @@
-module toolman.org/thirdparty/coreos/oidc
+module toolman.org/thirdparty/coreos/oidc/v2
 
 go 1.12
 
